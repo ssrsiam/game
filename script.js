@@ -36,6 +36,10 @@ class CrashGame {
         this.tableEl = document.querySelector('.live-table');
         this.statsValues = document.querySelectorAll('.stat-value');
 
+        // Notification element (Win Banner)
+        this.winBannerEl = document.getElementById('crashWinBanner');
+        this.winTextEl = document.getElementById('crashWinText');
+
         // Flight track data for explosion positioning
         this.lastX = 15;
         this.lastY = 107;
@@ -129,18 +133,31 @@ class CrashGame {
     }
 
     showNotification(message, type = 'success') {
-        const toast = document.createElement('div');
-        toast.className = `crash-toast crash-toast--${type}`;
-        toast.textContent = message;
-        document.body.appendChild(toast);
+        if (!this.winBannerEl || !this.winTextEl) return;
 
-        setTimeout(() => {
-            toast.classList.add('show');
+        // Clear previous state
+        if (this.notificationTimeout) clearTimeout(this.notificationTimeout);
+        this.winBannerEl.classList.remove('crash-win-banner--success', 'crash-win-banner--error', 'crash-win-banner--info', 'show');
+
+        // Set content and type
+        this.winTextEl.textContent = message;
+        this.winBannerEl.classList.add(`crash-win-banner--${type}`);
+        this.winBannerEl.style.display = 'flex';
+
+        // Animate in
+        requestAnimationFrame(() => {
+            this.winBannerEl.classList.add('show');
+        });
+
+        // Set timeout to hide
+        this.notificationTimeout = setTimeout(() => {
+            this.winBannerEl.classList.remove('show');
             setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }, 100);
+                if (!this.winBannerEl.classList.contains('show')) {
+                    this.winBannerEl.style.display = 'none';
+                }
+            }, 300);
+        }, 3000);
     }
 
     placeBet(index) {
@@ -314,9 +331,16 @@ class CrashGame {
             }
         }, 300);
 
+        if (this.waitingPlaneEl) this.waitingPlaneEl.style.display = 'none';
+        if (this.shineEl) this.shineEl.style.display = 'none';
+
         // Show flight plane and enable sprite animation
         this.planeEl.style.display = 'block';
         this.planeEl.style.opacity = '1';
+        if (this.shineEl) {
+            this.shineEl.style.display = 'block';
+            this.shineEl.style.opacity = '0.4';
+        }
         this.planeEl.classList.add('crash-game__pin--flying');
 
         // Update shine class
@@ -328,8 +352,8 @@ class CrashGame {
         if (this.gameState !== 'FLYING') return;
 
         const elapsed = Math.max(0, (currentTime - this.startTime) / 1000);
-        // SLOWER growth as requested: coefficients reduced
-        this.multiplier = 1 + (elapsed * 0.08 * (1 + elapsed * 0.04));
+        // Even faster initial growth: coefficients increased
+        this.multiplier = 1 + (elapsed * 0.18 * (1 + elapsed * 0.06));
 
         if (this.multiplier >= this.crashPoint) {
             this.crash();
@@ -389,19 +413,14 @@ class CrashGame {
     updateUI() {
         if (this.gameState === 'STARTING') {
             const timeInt = Math.ceil(this.countdownTime);
-            if (this.countdownContainer) this.countdownContainer.style.display = 'flex';
+            if (this.countdownContainer) this.countdownContainer.style.display = 'grid'; // Maintain grid centering
             if (this.bigCountdownEl) {
                 this.bigCountdownEl.textContent = timeInt > 0 ? timeInt : '';
             }
-            // Animate the sweep arc: depletes from full (0) to empty (251.3) over 6s
-            if (this.countdownArcEl) {
-                const circumference = 251.3;
-                const fraction = this.countdownTime / 6; // 6s total countdown
-                const offset = circumference * (1 - Math.max(0, fraction));
-                this.countdownArcEl.style.strokeDashoffset = offset;
-            }
             if (this.gameRoot) this.gameRoot.classList.add('is-starting');
             if (this.waitingPlaneEl) this.waitingPlaneEl.style.display = 'none';
+            if (this.planeEl) this.planeEl.style.display = 'none';
+            if (this.shineEl) this.shineEl.style.display = 'none';
 
             this.counterEl.style.display = 'none';
             if (this.waitingOverlay.querySelector('.crash-game__text')) {
@@ -427,8 +446,13 @@ class CrashGame {
         }
 
         if (this.gameState === 'FLYING') {
+            if (this.svgStrokeEl) {
+                this.svgStrokeEl.style.display = 'block';
+                this.svgStrokeEl.style.opacity = '1';
+            }
+
             const maxVisibleX = 260; // Expanded to make room for leveling-off sweep
-            const maxVisibleY = 90;
+            const maxVisibleY = 100; // Increased from 90 to make the plane fly higher
 
             // Progress mapping: use a tighter curve for the cap at 10x
             const rawProgress = Math.max(0, Math.min(1, Math.log10(this.multiplier) / Math.log10(10)));
@@ -447,36 +471,29 @@ class CrashGame {
             const pxX = (x / 320) * rect.width;
             const pxY = (yPlane / 128) * rect.height;
 
-            // NON-LINEAR ROTATION (Leveling off at the top)
-            // Starts at -15, peaks steepness at -40 (around 5x), levels to -10 (at 10x)
+            // NON-LINEAR ROTATION (JITTER REMOVED AS REQUESTED)
             const climbBase = Math.sin(progress * Math.PI);
             const angleDegPlane = -15 - (climbBase * 25) + (progress * 5);
 
-            // Use translate3d for GPU acceleration and sub-pixel smoothness
             // We use -50%, -50% for centering, then pxX, pxY for absolute position
             this.planeEl.style.left = '0';
             this.planeEl.style.top = '0';
             this.planeEl.style.transform = `translate3d(${pxX}px, ${pxY}px, 0) translate(-50%, -50%) rotate(${angleDegPlane}deg)`;
 
-            // ATTACH TRAIL DYNAMICALLY (Lock to plane's tail regardless of screen size)
+            // CALIBRATED TRAIL ATTACHMENT
             const angleRadBase = angleDegPlane * Math.PI / 180;
 
-            // Plane is 3.125em wide (~50px). 320 SVG units = rect.width pixels.
-            // So 1 pixel = 320 / rect.width SVG units.
-            const svgUnitsPerPixel = 320 / rect.width;
-            const planeWidthSVG = 50 * svgUnitsPerPixel;
-
-            // Offset the trail start to the tail (half the plane width + small buffer)
-            const tailOffsetX = -(planeWidthSVG * 0.45);
-            const tailOffsetY = -1;
+            // Adjust offsets to bring the line flush with the back of the golden plane image.
+            // The image has transparent padding, so the visual tail is closer to the center.
+            const tailOffsetX = -10; // Reduced negative offset to bring line closer to plane body
+            const tailOffsetY = 2;
 
             const tailAttachX = x + (tailOffsetX * Math.cos(angleRadBase) - tailOffsetY * Math.sin(angleRadBase));
             const tailAttachY = yPlane + (tailOffsetX * Math.sin(angleRadBase) + tailOffsetY * Math.cos(angleRadBase));
 
             // REDESIGNED TRAIL (CONCAVE SWEEP - "Coming from below")
-            // Quadratic Bezier with control point pulled toward the bottom (107)
             const controlX = 15 + (tailAttachX - 15) * 0.5;
-            const controlY = 107; // Pulls the curve down to the floor level
+            const controlY = 107;
 
             const d = `M15 107 Q${controlX} ${controlY} ${tailAttachX} ${tailAttachY}`;
             if (!isNaN(tailAttachX) && !isNaN(tailAttachY)) {

@@ -7,7 +7,14 @@
 }
 
 body {
-  background-color: var(--theme-primary--60);
+  background-color: #05060b;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  margin: 0;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 .vfm--outline-none:focus {
@@ -47,20 +54,6 @@ body {
   }
 }
 
-body {
-  display: flex;
-  flex-direction: column;
-  /* ← stacked vertically */
-  margin: 0;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -webkit-text-decoration-skip: objects;
-  text-decoration-skip: objects;
-  -webkit-text-size-adjust: 100%;
-  -moz-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-}
 
 button {
   font-family: inherit;
@@ -91,12 +84,22 @@ body {
   top: env(safe-area-inset-top);
 }
 
-#app,
+#app {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 412px;
+  min-height: 100vh;
+  position: relative;
+  background-color: hsl(232, 63%, 10%);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+  margin: 0 auto;
+}
+
 .games-container {
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
-  height: 100%;
+  width: 100%;
 }
 
 .games-container__shadow {
@@ -411,27 +414,17 @@ body {
 
 @media screen and (min-width: 375px) {
   .app-stage--is-portrait .crash {
-    font-size: 18px;
+    font-size: 16px;
   }
 }
 
 @media screen and (min-width: 411px) {
   .app-stage--is-portrait .crash {
-    font-size: 20px;
+    font-size: 17px;
   }
 }
 
-@media screen and (min-width: 768px) {
-  .app-stage--is-portrait .crash {
-    font-size: 35px;
-  }
-}
-
-@media screen and (min-width: 1024px) {
-  .app-stage--is-portrait .crash {
-    font-size: 46px;
-  }
-}
+/* Removed 768px and 1024px media queries that scaled the game too large on desktop */
 
 .crash__wrap {
   display: flex;
@@ -608,36 +601,39 @@ body {
 }
 
 .crash-header__balance {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.5em;
-  padding: 0.4em 0.8em;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 10px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 6em;
+  min-width: 140px;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .balance-label {
-  font-size: 0.55em;
+  font-size: 11px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-  letter-spacing: 0.05em;
-  margin-bottom: 0.1em;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  margin-bottom: 2px;
+  font-weight: 700;
 }
 
 .balance-value {
-  font-size: 0.9em;
-  font-weight: 700;
-  color: #ff9100;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent-neon);
   font-variant-numeric: tabular-nums;
 }
 
 .balance-currency {
-  font-size: 0.65em;
-  color: rgba(255, 255, 255, 0.8);
-  margin-top: -0.1em;
+  font-size: 12px;
+  color: var(--text-main);
+  margin-top: -2px;
+  opacity: 0.8;
 }
 
 .crash-header__btn {
@@ -701,7 +697,8 @@ body {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 5;
+  z-index: 30;
+  /* Ensure Plane is above Line (15) */
 }
 
 .crash-game::before {
@@ -722,6 +719,9 @@ body {
 .crash-game__svg {
   width: 100%;
   height: 8em;
+  position: relative;
+  z-index: 15;
+  /* Above Banner (10), Below Plane Container (30) */
 }
 
 .crash-game__counter {
@@ -757,16 +757,23 @@ body {
 .crash-game__stroke {
   stroke-linejoin: round;
   fill: none;
-  transition: none !important;
+  transition: stroke-dasharray 0.1s linear !important;
+  stroke: #ff9100 !important;
+  stroke-width: 4 !important;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 8px #ff6a00);
+  position: relative;
+  z-index: 15;
+  /* Above notifications, below plane */
 }
 
 .crash-game__pin {
   position: absolute;
   bottom: auto;
   left: auto;
-  z-index: 1;
-  width: 3.125em;
-  height: 2.0625em;
+  z-index: 20;
+  width: 4.2em;
+  height: 2.8em;
   will-change: transform, bottom, left;
   background: url(Assets/plane.png) 0 0/4800% 100%no-repeat;
   transition: none !important;
@@ -785,19 +792,121 @@ body {
 }
 
 .crash-game__pin--waiting {
-  display: none;
+  display: none !important;
   /* Hidden by default during countdown */
   position: absolute;
   left: 15px;
   top: 107px;
   transform: translate(-50%, -50%);
   margin: 0;
-  animation: plane-spin steps(47) 3s infinite;
+  animation: steps-sprite steps(47) 3s infinite;
+}
+
+.is-starting .crash-game__pin--waiting,
+.is-starting .crash-game__pin,
+.is-starting .crash-game__shine {
+  display: none !important;
+}
+
+.crash-game__pin--flying {
+  animation: steps-sprite steps(47) 3s infinite;
+}
+
+@keyframes steps-sprite {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: -4700% 0;
+  }
+}
+
+@keyframes steps-crash-sprite {
+  0% {
+    background-position: 0 0;
+  }
+
+  4.16% {
+    background-position: -100% 0;
+  }
+
+  8.33% {
+    background-position: -200% 0;
+  }
+
+  12.5% {
+    background-position: -300% 0;
+  }
+
+  16.66% {
+    background-position: -400% 0;
+  }
+
+  20.83% {
+    background-position: -500% 0;
+  }
+
+  25% {
+    background-position: -600% 0;
+  }
+
+  29.16% {
+    background-position: -700% 0;
+  }
+
+  33.33% {
+    background-position: -800% 0;
+  }
+
+  37.5% {
+    background-position: -900% 0;
+  }
+
+  41.66% {
+    background-position: -1000% 0;
+  }
+
+  /* Slower part for the smoke: frames 12 to 18 */
+  50% {
+    background-position: -1100% 0;
+  }
+
+  60% {
+    background-position: -1200% 0;
+  }
+
+  70% {
+    background-position: -1300% 0;
+  }
+
+  80% {
+    background-position: -1400% 0;
+  }
+
+  85% {
+    background-position: -1500% 0;
+  }
+
+  90% {
+    background-position: -1600% 0;
+  }
+
+  95% {
+    background-position: -1700% 0;
+  }
+
+  100% {
+    background-position: -1800% 0;
+  }
+
+  /* Final completely gone frame */
 }
 
 .crash-game__pin--crash::before {
   opacity: 1;
-  animation: steps-crash-sprite steps(1) 2s forwards;
+  /* Increased duration to 2.5s to give smoke more time to linger, use step-end to snap frame-by-frame */
+  animation: steps-crash-sprite 2.5s step-end forwards;
 }
 
 .crash-game__shine {
@@ -820,9 +929,11 @@ body {
 .crash-game__wrap {
   position: absolute;
   top: 0;
-  left: 0.625em;
-  width: 16.25em;
-  height: 7.5em;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 30;
 }
 
 .crash-game__timer {
@@ -838,21 +949,21 @@ body {
 .crash-game__waiting {
   display: flex;
   align-items: flex-start;
-  /* Removed center alignment */
   justify-content: flex-start;
-  /* Removed center alignment */
   opacity: 0;
   position: absolute;
   z-index: 2;
   flex-direction: column;
   padding: 0;
-  /* Removed padding */
   width: 100%;
   height: 100%;
   border-radius: 0.3125em;
   transition: opacity 0.3s ease;
   pointer-events: none;
-  /* Ensure it doesn't block clicks when fading */
+}
+
+.crash-game__text {
+  display: none !important;
 }
 
 .crash-game__waiting::before {
@@ -897,7 +1008,7 @@ body {
   position: absolute;
   bottom: -1px;
   left: 0;
-  z-index: 0;
+  z-index: 5;
   width: calc(100% - 0.25em);
   height: 100%;
   overflow: hidden;
@@ -2361,6 +2472,53 @@ body {
   /* Prevents text breaking */
 }
 
+.crash-win-banner {
+  position: absolute;
+  left: 25px;
+  top: 35%;
+  transform: translate(0, -50%) scale(0.9);
+  background: #0a0b14;
+  border: 1px solid #1a1b26;
+  border-radius: 4px;
+  padding: 4px 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  /* Behind Line (15) and Plane (30) */
+}
+
+.crash-win-banner.show {
+  opacity: 1;
+  transform: translate(0, -50%) scale(1);
+}
+
+.crash-win-banner__text {
+  color: #ccff00 !important;
+  font-size: 0.55em;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  font-family: inherit;
+  text-transform: uppercase;
+}
+
+.crash-win-banner--success .crash-win-banner__text {
+  color: #ccff00 !important;
+}
+
+.crash-win-banner--error .crash-win-banner__text {
+  color: #F44336 !important;
+}
+
+.crash-win-banner--info .crash-win-banner__text {
+  color: #ccff00 !important;
+}
+
 .bet-grid-container {
   display: flex;
   gap: 10px;
@@ -2787,6 +2945,41 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
+.crash-win-banner {
+  position: absolute;
+  left: 25px;
+  top: 35%;
+  transform: translate(0, -50%) scale(0.9);
+  z-index: 10;
+  /* Above grid (5), below line (15) and plane (20) */
+  background: #0a0b14;
+  border: 1px solid #1a1b26;
+  border-radius: 4px;
+  padding: 4px 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crash-win-banner.show {
+  opacity: 1;
+  transform: translate(0, -50%) scale(1);
+}
+
+.crash-win-banner__text {
+  color: #ccff00 !important;
+  font-size: 0.55em;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  font-family: inherit;
+  text-transform: uppercase;
+}
+
 /* History Modal */
 .history-modal-overlay {
   position: absolute;
@@ -2967,20 +3160,70 @@ body {
    DUAL OPPOSITE SPINNING DOT RINGS TIMER
    ============================================= */
 
-.crash-countdown-container {
+/* Countdown Timer Styles - High Fidelity 6-segments */
+.crash-countdown-wrapper {
   position: absolute;
-  right: 4%;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 100px;
-  height: 100px;
+  bottom: 10px;
+  right: 10px;
+  width: 140px;
+  height: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
+  pointer-events: none;
+  z-index: 100;
+  /* Mask to fade out segments as they rotate towards the top-left (relative to corner) */
+  -webkit-mask-image: linear-gradient(135deg, black 60%, transparent 85%);
+  mask-image: linear-gradient(135deg, black 60%, transparent 85%);
 }
 
-/* The SVG holds both circles — no rotation here */
+.crash-game__big-countdown {
+  font-size: 88px;
+  font-weight: 900;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  line-height: 1;
+  text-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+  z-index: 10;
+  margin-right: -20px;
+  /* Overlap slightly with segments SVG center */
+}
+
+.crash-countdown-svg {
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+}
+
+.crash-countdown-segments-group {
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: 100px 100px;
+}
+
+.countdown-segment {
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 4;
+  stroke-linecap: round;
+  fill: none;
+  transition: opacity 0.3s ease, stroke 0.3s ease;
+}
+
+/* =============================================
+   DUAL OPPOSITE SPINNING DOT RINGS TIMER
+   ============================================= */
+
+.crash-countdown-container {
+  position: absolute;
+  right: 15px;
+  bottom: 15px;
+  width: 100px;
+  height: 100px;
+  display: grid !important;
+  place-items: center;
+  z-index: 100;
+  pointer-events: none;
+}
+
 .crash-countdown-svg {
   position: absolute;
   top: 0;
@@ -2989,36 +3232,29 @@ body {
   height: 100%;
 }
 
-/*
-  viewBox: 0 0 120 120
-  Outer ring: r=54 → circumference = 2π×54 ≈ 339.3
-  Inner ring: r=42 → circumference = 2π×42 ≈ 263.9
-  Gap between rings: 54 - 42 - strokeWidth = 12 - 3 = 9 SVG units
-*/
+.crash-game__big-countdown {
+  font-size: 48px;
+  /* Slightly larger for premium feel */
+  font-weight: 900;
+  color: #fff;
+  font-family: 'Roboto', sans-serif;
+  line-height: 0.85;
+  /* Visual nudge for better vertical centering */
+  margin: 0;
+  padding: 0;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  position: relative;
+  z-index: 1;
+}
 
 /* OUTER ring — counter-clockwise */
 .countdown-ring-outer {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.85);
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-dasharray: 4, 10;
-  /* dots: 4px visible, 10px gap */
-  stroke-dashoffset: 0;
   transform-origin: 60px 60px;
-  /* center of viewBox */
   animation: spin-ccw 4s linear infinite;
 }
 
 /* INNER ring — clockwise */
 .countdown-ring-inner {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.6);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-dasharray: 3, 9;
-  /* slightly smaller dots */
-  stroke-dashoffset: 0;
   transform-origin: 60px 60px;
   animation: spin-cw 3s linear infinite;
 }
@@ -3045,34 +3281,18 @@ body {
   }
 }
 
-/* Centered number — does NOT rotate */
 .crash-game__big-countdown {
-  position: relative;
-  font-size: 2.2em;
-  font-weight: 800;
+  font-size: 48px;
+  font-weight: 900;
   color: #fff;
-  z-index: 2;
-  pointer-events: none;
+  z-index: 10;
   line-height: 1;
   font-family: 'Roboto', sans-serif;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .crash-game-ring {
   display: none;
-}
-
-.crash-countdown-container::after {
-  display: none;
-}
-
-@keyframes rotate-dashed {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 /* Hide background elements during countdown */
