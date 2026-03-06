@@ -483,10 +483,17 @@ class CrashGame {
             // CALIBRATED TRAIL ATTACHMENT
             const angleRadBase = angleDegPlane * Math.PI / 180;
 
-            // Adjust offsets to bring the line flush with the back of the golden plane image.
-            // The image has transparent padding, so the visual tail is closer to the center.
-            const tailOffsetX = -10; // Reduced negative offset to bring line closer to plane body
-            const tailOffsetY = 2;
+            // Dynamic tail offset calculation based on actual pixel size converted to SVG units
+            // This prevents separation when the container scales or the plane flies high
+            const svgUnitsPerPixelX = 320 / rect.width;
+            const svgUnitsPerPixelY = 128 / rect.height;
+            const planeWidthSVG = this.planeEl.offsetWidth * svgUnitsPerPixelX;
+            const planeHeightSVG = this.planeEl.offsetHeight * svgUnitsPerPixelY;
+
+            // Tail is approx 20% behind the visual center
+            const tailOffsetX = -(planeWidthSVG * 0.20);
+            // Slight drop to hit the nipple
+            const tailOffsetY = (planeHeightSVG * 0.10);
 
             const tailAttachX = x + (tailOffsetX * Math.cos(angleRadBase) - tailOffsetY * Math.sin(angleRadBase));
             const tailAttachY = yPlane + (tailOffsetX * Math.sin(angleRadBase) + tailOffsetY * Math.cos(angleRadBase));
