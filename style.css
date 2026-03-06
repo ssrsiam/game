@@ -827,60 +827,60 @@ body {
     background-position: 0 0;
   }
 
-  4.16% {
+  2% {
     background-position: -100% 0;
   }
 
-  8.33% {
+  4% {
     background-position: -200% 0;
   }
 
-  12.5% {
+  6% {
     background-position: -300% 0;
   }
 
-  16.66% {
+  8% {
     background-position: -400% 0;
   }
 
-  20.83% {
+  10% {
     background-position: -500% 0;
   }
 
-  25% {
+  12% {
     background-position: -600% 0;
   }
 
-  29.16% {
+  14% {
     background-position: -700% 0;
   }
 
-  33.33% {
+  16% {
     background-position: -800% 0;
   }
 
-  37.5% {
+  18% {
     background-position: -900% 0;
   }
 
-  41.66% {
+  20% {
     background-position: -1000% 0;
   }
 
-  /* Slower part for the smoke: frames 12 to 18 */
-  50% {
+  /* Extremely slow part for the smoke: frames 12 to 18 */
+  35% {
     background-position: -1100% 0;
   }
 
-  60% {
+  50% {
     background-position: -1200% 0;
   }
 
-  70% {
+  65% {
     background-position: -1300% 0;
   }
 
-  80% {
+  75% {
     background-position: -1400% 0;
   }
 
@@ -888,11 +888,11 @@ body {
     background-position: -1500% 0;
   }
 
-  90% {
+  92% {
     background-position: -1600% 0;
   }
 
-  95% {
+  98% {
     background-position: -1700% 0;
   }
 
@@ -905,8 +905,8 @@ body {
 
 .crash-game__pin--crash::before {
   opacity: 1;
-  /* Increased duration to 2.5s to give smoke more time to linger, use step-end to snap frame-by-frame */
-  animation: steps-crash-sprite 2.5s step-end forwards;
+  /* 2.8s duration ensures it finishes just before the 3.0s game reset */
+  animation: steps-crash-sprite 2.8s step-end forwards;
 }
 
 .crash-game__shine {
